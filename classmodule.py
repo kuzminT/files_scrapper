@@ -6,6 +6,7 @@ class FilesScrapper:
     """
 
     """
+
     def __init__(self):
         parser = argparse.ArgumentParser(description="Recursive copy static files by extension from site")
         parser.add_argument('link',
@@ -33,29 +34,41 @@ class FilesScrapper:
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
                         }
 
-        self.files_list =  self.get_files_links(self.main_link)
+        self.files_list = self.get_files_links(self.main_link)
+
+        print(self.files_list)
 
         self.parse_files()
 
-
     def parse_files(self):
-        i = 1
+        # i = 1
+        # while True:
+        #     print('Итерация № %d...' % i)
+        #     new_files = self.files_list - self.finished_files
+        #
+        #     if new_files and len(new_files):
+        #         self.get_files(new_files)
+        #     else:
+        #         break
 
-        while True:
-            print('Итерация № %d...' % i)
-            new_files = self.files_list - self.finished_files
-
-            if new_files and len(new_files):
-                self.get_files(new_files)
-            else:
-                break
-
+        for file in self.files_list:
+            print(file)
 
     """
     Get files links from current page
     """
     def get_files_links(self, page):
-        pass
+
+        try:
+            r = self.session.get(page, headers=self.headers)
+        except requests.exceptions.RequestException as e:
+            print('Something wrong! Was error while parsing link {}\n'.format(page))
+            print(e)
+        else:
+            if r.status_code == 200:
+                print(111)
+        return set()
+
 
     def get_files(self, files_list):
         file_link = str()
