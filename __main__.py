@@ -1,6 +1,8 @@
 from classmodule import FilesScrapper
 import time
 
+main_url = 'https://mmgp.com/showthread.php?t=8785'
+
 if __name__ == '__main__':
     start_time = time.time()
     scrapper = FilesScrapper()

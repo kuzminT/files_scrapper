@@ -2,19 +2,25 @@ import argparse
 import requests
 from lxml import etree, html
 import re, os.path as path
+from urllib.parse import urlparse
 
+from os import linesep, makedirs, getcwd
+from sys import exit
+
+
+# from os.path import join as path_join, dirname, abspath, exists as dir_exists
 
 class FilesScrapper:
     """"
     Utilit for downloading files from page by allowed extension
     Save all files in directories with the same names
-    """""
+    """
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="Recursive copy static files by extension from site")
         parser.add_argument('link',
                             help='path to the page')
-        parser.add_argument('--allow', '-a', default='jpg', help='Allow extensions of files')
+        parser.add_argument('--allow', '-a', default=None, help='Allow extensions of files')
 
         parser.add_argument('--limit', '-l', default='10', help='Limit of the files')
 
@@ -22,11 +28,17 @@ class FilesScrapper:
 
         self.main_link = args.link
 
-        self.extension = args.allow
+        if args.allow is not None:
+            extension = args.allow
+            self.reg = re.compile('%s.*.(%s)$' % (self.main_link, re.escape(extension)))
+        else:
+            # compile reg expr for images files
+            self.reg = re.compile('^.*\.(jpe?g|png|gif)$')
 
         self.files_limit = int(args.limit)
 
-        self.reg = re.compile('%s.*.(%s)$' % (self.main_link, re.escape(self.extension)))
+        # self.reg = re.compile('%s.*.(%s)$' % (self.main_link, re.escape(self.extension)))
+
         # print(self.reg)
 
         if not args.link:
@@ -108,10 +120,26 @@ class FilesScrapper:
 
         print('Downloading {}...'.format(file_link))
         filename = path.basename(file_link)
+        url_parts = urlparse(file_link)
+        file_dir = path.join(path.dirname(path.abspath(__file__)), 'files', path.dirname(url_parts.path.lstrip('/')))
+
+        # print('file dir:', file_dir)
+        # exit()
+
+        if not path.exists(file_dir):
+            makedirs(file_dir)
+
+        filename = path.join(file_dir, filename)
+
+        print(f'filename {filename}')
+
+        # url_parts
         response = requests.get(file_link)
 
         if response.status_code == 200:
             with open(filename, 'wb') as f:
-                f.write(response.content)
+                for chunk in response.iter_content(100000):
+                    f.write(chunk)
+
             # Save file_link in memory
             self.finished_files.add(file_link)
