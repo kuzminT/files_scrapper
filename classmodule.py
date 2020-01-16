@@ -2,7 +2,7 @@ import argparse
 import requests
 from lxml import etree, html
 import re, os.path as path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 from os import linesep, makedirs, getcwd
 from sys import exit
@@ -24,6 +24,8 @@ class FilesScrapper:
 
         parser.add_argument('--limit', '-l', default='10', help='Limit of the files')
 
+        parser.add_argument('--domain', '-d', default=None, help='Domain from where allow downloading files')
+
         args = parser.parse_args()
 
         self.main_link = args.link
@@ -36,6 +38,11 @@ class FilesScrapper:
             self.reg = re.compile('^.*\.(jpe?g|png|gif)$')
 
         self.files_limit = int(args.limit)
+
+        self.domain = None
+
+        if args.domain:
+            self.domain = args.domain
 
         # self.reg = re.compile('%s.*.(%s)$' % (self.main_link, re.escape(self.extension)))
 
@@ -61,10 +68,17 @@ class FilesScrapper:
         self.parse_files()
 
     def get_page(self, page):
+
+        if self.domain and not page.startswith(self.domain):
+            return None
         try:
-            r = self.session.get(page, headers=self.headers)
+            r = self.session.get(unquote(page), headers=self.headers)
         except requests.exceptions.RequestException as e:
             print('Something wrong! Was error while parsing link {}\n'.format(page))
+            print(e)
+            return None
+        except e:
+            print('Unknown exception! Was error while parsing link {}\n'.format(page))
             print(e)
             return None
         else:
@@ -114,8 +128,13 @@ class FilesScrapper:
 
     def get_file(self, file_link):
 
+        file_link = unquote(file_link)
+
         # If we downloaded this file early, then quit
         if file_link in self.finished_files:
+            return None
+
+        if self.domain and not file_link.startswith(self.domain):
             return None
 
         print('Downloading {}...'.format(file_link))
@@ -134,7 +153,11 @@ class FilesScrapper:
         print(f'filename {filename}')
 
         # url_parts
-        response = requests.get(file_link)
+        try:
+            response = self.session.get(file_link, headers=self.headers)
+        except Exception as e:
+            print(e)
+            return None
 
         if response.status_code == 200:
             with open(filename, 'wb') as f:
