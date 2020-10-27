@@ -5,7 +5,7 @@ backports.shutil-get-terminal-size==1.0.0
 chardet==3.0.4
 configparser==3.5.0b2
 constantly==15.1.0
-cryptography==2.3
+cryptography==3.2
 cssselect==1.0.3
 dblatex==0.3.10
 decorator==4.4.0
