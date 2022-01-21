@@ -19,7 +19,7 @@ incremental==17.5.0
 iniparse==0.4
 ipaddress==1.0.17
 ipdb==0.12
-ipython==5.8.0
+ipython==7.16.3
 ipython-genutils==0.2.0
 keyring==17.1.1
 keyrings.alt==3.1.1
